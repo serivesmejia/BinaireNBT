@@ -1,36 +1,36 @@
 package com.github.serivesmejia.binairenbt.tag;
 
+import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
+
 import java.nio.ByteOrder;
 
 public class TAGInt extends ByteBufferTAG<Integer> {
 
-    public TAGInt() {
-        init(4);
+    public TAGInt(String name) {
+        init(name, 4);
         bb.order(ByteOrder.BIG_ENDIAN);
+    }
+
+    public TAGInt(byte[] bytes) throws UnmatchingTagIdException {
+        init(bytes);
     }
 
     @Override
     public Integer toJava() {
-        bb.position(0);
+        bb.position(payloadPosition);
         return bb.getInt();
     }
 
     @Override
     public void fromJava(Integer value) {
         bb.position(0);
+
+        bb.put(prePayloadBytes);
         bb.putInt(value);
     }
 
     @Override
-    public void fromBytes(byte[] bytes) {
-        assertInRange(bytes.length);
-
-        bb.position(0);
-        bb.put(bytes);
-    }
-
-    @Override
-    public int getId() {
+    public int id() {
         return 3;
     }
 
