@@ -13,7 +13,7 @@ public class TAGEnd implements TAG<Void> {
     }
 
     @Override
-    public void fromPayloadBytes(byte[] bytes) {
+    public void copyToPayload(byte[] bytes) {
         throw new UnsupportedOperationException("fromPayloadBytes() method is not supported for this type of TAG (END)");
     }
 

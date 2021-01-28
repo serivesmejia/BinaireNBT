@@ -4,8 +4,6 @@ import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
 import com.github.serivesmejia.binairenbt.tag.*;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 import static org.junit.Assert.*;
 
 public class TAGTests {
@@ -18,7 +16,7 @@ public class TAGTests {
         tagNbt.fromJava(lng);
 
         TAGByte sameTagNbt = new TAGByte("sameByteTag");
-        sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
+        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
 
         assertEquals(lng, (byte)sameTagNbt.toJava());
     }
@@ -31,7 +29,7 @@ public class TAGTests {
         tagNbt.fromJava(lng);
 
         TAGShort sameTagNbt = new TAGShort("sameShortTag");
-        sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
+        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
 
         assertEquals(lng, (short)sameTagNbt.toJava());
     }
@@ -44,7 +42,7 @@ public class TAGTests {
         tagNbt.fromJava(lng);
 
         TAGInt sameTagNbt = new TAGInt("sameIntTag");
-        sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
+        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
 
         assertEquals(lng, (int)sameTagNbt.toJava());
     }
@@ -57,7 +55,7 @@ public class TAGTests {
         longNbt.fromJava(lng);
 
         TAGLong sameLongNbt = new TAGLong("sameLongTag");
-        sameLongNbt.fromPayloadBytes(longNbt.payloadBytes());
+        sameLongNbt.copyToPayload(longNbt.payloadBytes());
 
         assertEquals(lng, (long)sameLongNbt.toJava());
     }
@@ -70,7 +68,7 @@ public class TAGTests {
         tagNbt.fromJava(lng);
 
         TAGFloat sameTagNbt = new TAGFloat("sameFloatTag");
-        sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
+        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
 
         assertEquals(lng, sameTagNbt.toJava(), 0);
     }
@@ -83,7 +81,7 @@ public class TAGTests {
         tagNbt.fromJava(lng);
 
         TAGDouble sameTagNbt = new TAGDouble("sameDoubleTag");
-        sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
+        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
 
         assertEquals(lng, sameTagNbt.toJava(), 0);
     }
@@ -95,12 +93,10 @@ public class TAGTests {
         TAGByteArray tagNbt = new TAGByteArray("byteArrayTag", 4);
         tagNbt.fromJava(lng);
 
-        TAGByteArray sameTagNbt = new TAGByteArray("sameByteArrayTag", 4);
-        sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
-
-        System.out.println(Arrays.toString(sameTagNbt.toJava()));
+        TAGByteArray sameTagNbt = new TAGByteArray(tagNbt.bytes());
 
         assertArrayEquals(lng, sameTagNbt.toJava());
+        assertEquals(tagNbt.name(), sameTagNbt.name());
     }
 
 }

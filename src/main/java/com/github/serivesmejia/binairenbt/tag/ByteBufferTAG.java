@@ -22,10 +22,8 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
     private String name;
     private byte[] nameBytes;
 
-    private byte[] headerBytes;
-
     private int payloadCapacity = 0;
-    protected int typePayloadCapacity = -1;
+    private int typePayloadCapacity = -1;
 
     private boolean hasInit = false;
 
@@ -48,15 +46,13 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         //get name length as short
         nameLength = (short) nameBytes.length;
 
-        headerBytes = new byte[Constants.NONAME_HEADER_BYTES + nameLength];
+        byte[]  headerBytes = new byte[Constants.NONAME_HEADER_BYTES + nameLength];
         headerBytes[0] = idByte();
 
         //putting the two bytes indicating the name length
         nameLengthBytes = ByteUtil.shortToBigEndianBytes(nameLength);
 
-        for(int i = 0 ; i < nameLengthBytes.length ; i++) {
-            headerBytes[i + 1] = nameLengthBytes[i];
-        }
+        System.arraycopy(nameLengthBytes, 0, headerBytes, 1, nameLengthBytes.length);
 
         //putting all the name bytes
         if (nameLength >= 0)
@@ -68,44 +64,69 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         payloadPosition = Constants.NONAME_HEADER_BYTES + nameLength;
 
         bb = ByteBuffer.allocate(payloadCapacity + payloadPosition);
+        bb.position(0);
+        bb.put(headerBytes);
     }
 
-    protected final void init(byte[] bytes) throws UnmatchingTagIdException {
+    protected final void init(byte[] bytes, int typePayloadCapacity) throws UnmatchingTagIdException {
         if(hasInit) return;
         hasInit = true;
+
+        this.typePayloadCapacity = typePayloadCapacity;
 
         bb = ByteBuffer.allocate(bytes.length);
         fromBytes(bytes);
     }
 
+    protected final void init(byte[] bytes) throws UnmatchingTagIdException {
+        init(bytes, -1);
+    }
+
     @Override
     public void fromBytes(byte[] bytes) throws UnmatchingTagIdException {
+        //bound check (we want the exact same amount of bytes the bytebuffer can handle)
         if(bytes.length > bb.capacity()) throw new BufferOverflowException();
         else if(bytes.length < bb.capacity()) throw new BufferUnderflowException();
 
         //ID check to see if we're actually dealing with the correct type
         //(ID should always be the first byte)
         if(bytes[0] != idByte())
-            throw new UnmatchingTagIdException("TAG ID from given bytes does not match with this tag (" + this.getClass().getSimpleName() + ")");
+            throw new UnmatchingTagIdException("TAG ID "+ bytes[0] +" from given bytes does not match with this tag ( " + idByte() + " " + this.getClass().getSimpleName() + ")");
 
+        //getting the name length from the 2nd and 3rd bytes, short
         nameLength = ByteUtil.bigEndianBytesToShort(new byte[] {bytes[1], bytes[2]});
-        headerBytes = new byte[Constants.NONAME_HEADER_BYTES + nameLength];
 
-        if (headerBytes.length >= 0)
-            System.arraycopy(bytes, 0, headerBytes, 0, headerBytes.length);
+        //defining the payload starting position (should be exactly at the header ending)
+        payloadPosition = (Constants.NONAME_HEADER_BYTES + nameLength);
 
-        int payloadBytesAmount = bytes.length - headerBytes.length;
+        //defining the actual payload capacity
+        //(if we have a >= 0 typePayloadCapacity we use that,
+        //since that means we have how big this type should
+        //actually be and that's our best bet and we enforce that)
+        if(typePayloadCapacity > -1) {
+            //using the type capacity
+            payloadCapacity = typePayloadCapacity;
 
-        if(payloadBytesAmount > typePayloadCapacity && typePayloadCapacity != -1) {
-
+            if(payloadCapacity > bytes.length - payloadPosition) {
+                throw new IllegalTagFormatException("Amount of given bytes is bigger than this tag's payload capacity");
+            }
+        } else {
+            //using some determined capacity based on header length
+            payloadCapacity = bytes.length - payloadPosition;
         }
 
+        //putting the actual bytes into the ByteBuffer
         bb.position(0);
         bb.put(bytes);
+
+        //grabbing name bytes from header bytes basing from the specified name length
+        byte[] nameBytes = grabHeaderBytes(nameLength, Constants.NONAME_HEADER_BYTES);
+        //decoding the UTF-8 bytes into an actual string
+        name = new String(nameBytes, StandardCharsets.UTF_8);
     }
 
     @Override
-    public void fromPayloadBytes(byte[] bytes) {
+    public void copyToPayload(byte[] bytes) {
         assertInRange(bytes.length);
 
         bb.position(payloadPosition);
@@ -134,15 +155,32 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
     @Override
     public final byte[] headerBytes() {
-        return headerBytes.clone();
+        bb.position(0);
+
+        byte[] headerBytes = new byte[bb.array().length - payloadCapacity];
+        System.arraycopy(bb.array(), 0, headerBytes, 0, headerBytes.length);
+
+        return headerBytes;
+    }
+
+    public final byte grabHeaderByte(int byteIndex) {
+        return headerBytes()[byteIndex];
+    }
+
+    public final byte[] grabHeaderBytes(int grabAmount, int offset) {
+        byte[] grabbedBytes = new byte[grabAmount];
+        byte[] headerBytes = headerBytes();
+
+        System.arraycopy(headerBytes, offset, grabbedBytes, 0, grabbedBytes.length);
+
+        return grabbedBytes;
     }
 
     @Override
     public final byte[] payloadBytes() {
         byte[] payloadBytes = new byte[payloadCapacity];
 
-        if (payloadCapacity >= 0)
-            System.arraycopy(bb.array(), payloadPosition, payloadBytes, 0, payloadCapacity);
+        System.arraycopy(bb.array(), payloadPosition, payloadBytes, 0, payloadCapacity);
 
         return payloadBytes;
     }
@@ -156,9 +194,8 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         byte[] grabbedBytes = new byte[grabAmount];
         byte[] payloadBytes = payloadBytes();
 
-        for(int i = 0 ; i < grabAmount ; i++) {
-            grabbedBytes[i] = payloadBytes[i + offset];
-        }
+        if (grabAmount >= 0)
+            System.arraycopy(payloadBytes, offset, grabbedBytes, 0, grabAmount);
 
         return grabbedBytes;
     }

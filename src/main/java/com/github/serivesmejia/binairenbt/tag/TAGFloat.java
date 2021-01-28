@@ -12,8 +12,7 @@ public class TAGFloat extends ByteBufferTAG<Float> {
     }
 
     public TAGFloat(byte[] bytes) {
-        typePayloadCapacity = Constants.TAG_FLOAT_PAYLOAD_CAPACITY;
-        init(bytes);
+        init(bytes, Constants.TAG_FLOAT_PAYLOAD_CAPACITY);
     }
 
     @Override

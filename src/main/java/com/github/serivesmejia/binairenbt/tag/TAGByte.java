@@ -9,8 +9,7 @@ public class TAGByte extends ByteBufferTAG<Byte> {
     }
 
     public TAGByte(byte[] bytes) {
-        typePayloadCapacity = Constants.TAG_BYTE_PAYLOAD_CAPACITY;
-        init(bytes);
+        init(bytes, Constants.TAG_BYTE_PAYLOAD_CAPACITY);
     }
 
     @Override

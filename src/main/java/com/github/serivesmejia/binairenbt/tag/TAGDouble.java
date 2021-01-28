@@ -9,8 +9,7 @@ public class TAGDouble extends ByteBufferTAG<Double> {
     }
 
     public TAGDouble(byte[] bytes) {
-        typePayloadCapacity = Constants.TAG_DOUBLE_PAYLOAD_CAPACITY;
-        init(bytes);
+        init(bytes, Constants.TAG_DOUBLE_PAYLOAD_CAPACITY);
     }
 
     @Override

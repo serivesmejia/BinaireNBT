@@ -12,8 +12,7 @@ public class TAGLong extends ByteBufferTAG<Long> {
     }
 
     public TAGLong(byte[] bytes) {
-        typePayloadCapacity = Constants.TAG_LONG_PAYLOAD_CAPACITY;
-        init(bytes);
+        init(bytes, Constants.TAG_LONG_PAYLOAD_CAPACITY);
     }
 
     @Override

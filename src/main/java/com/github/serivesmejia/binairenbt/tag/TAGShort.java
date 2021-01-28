@@ -12,8 +12,7 @@ public class TAGShort extends ByteBufferTAG<Short> {
     }
 
     public TAGShort(byte[] bytes)  {
-        typePayloadCapacity = Constants.TAG_SHORT_PAYLOAD_CAPACITY;
-        init(bytes);
+        init(bytes, Constants.TAG_SHORT_PAYLOAD_CAPACITY);
     }
 
     @Override

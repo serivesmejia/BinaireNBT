@@ -7,7 +7,7 @@ public interface TAG<T> {
     T toJava();
     void fromJava(T value);
 
-    void fromPayloadBytes(byte[] bytes);
+    void copyToPayload(byte[] bytes);
     void fromBytes(byte[] bytes) throws UnmatchingTagIdException;
 
     void position(int position);
@@ -21,7 +21,6 @@ public interface TAG<T> {
 
     int payloadCapacity();
     int payloadPosition();
-
 
     String name();
     byte[] nameBytes();

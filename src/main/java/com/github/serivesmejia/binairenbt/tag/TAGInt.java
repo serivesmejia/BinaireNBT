@@ -12,8 +12,7 @@ public class TAGInt extends ByteBufferTAG<Integer> {
     }
 
     public TAGInt(byte[] bytes) {
-        typePayloadCapacity = Constants.TAG_INT_PAYLOAD_CAPACITY;
-        init(bytes);
+        init(bytes, Constants.TAG_INT_PAYLOAD_CAPACITY);
     }
 
     @Override

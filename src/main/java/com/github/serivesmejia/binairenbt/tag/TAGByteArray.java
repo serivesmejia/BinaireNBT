@@ -3,8 +3,6 @@ package com.github.serivesmejia.binairenbt.tag;
 import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.Arrays;
-
 public class TAGByteArray extends ByteBufferTAG<Byte[]>{
 
     TAGInt capacityInt = new TAGInt("capacityInt");
@@ -19,7 +17,7 @@ public class TAGByteArray extends ByteBufferTAG<Byte[]>{
     public TAGByteArray(byte[] bytes) {
         init(bytes);
         //grab the array capacity from the first 4 bytes of this tag's payload
-        capacityInt.fromPayloadBytes(grabPayloadBytes(capacityInt.payloadCapacity(), 0));
+        capacityInt.copyToPayload(grabPayloadBytes(capacityInt.payloadCapacity(), 0));
 
         if(arrayCapacity() < 1) throw new IllegalTagFormatException("Capacity should be bigger than 0");
     }
