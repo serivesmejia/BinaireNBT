@@ -27,6 +27,9 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
     private int payloadCapacity = 0;
     private int typePayloadCapacity = -1;
 
+    private byte[] cachedHeaderBytes = new byte[Constants.NONAME_HEADER_BYTES];
+    private byte[] cachedPayloadBytes = new byte[0];
+
     private boolean hasInit = false;
 
     protected final void init(String name, int payloadCapacity) throws IllegalTagFormatException {
@@ -45,34 +48,45 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
             throw new IllegalArgumentException("TAG name is bigger than 2-byte short max value (" + String.valueOf(Short.MAX_VALUE) + ")");
         }
 
-        //get name length as short
+        //get name utf-8 bytes length as 2-byte short
         nameLength = (short) nameBytes.length;
 
-        byte[]  headerBytes = new byte[Constants.NONAME_HEADER_BYTES + nameLength];
-        headerBytes[0] = idByte();
+        //defining the cached payload array
+        cachedPayloadBytes = new byte[payloadCapacity];
 
-        //putting the two bytes indicating the name length
+        //defining the header bytes
+        cachedHeaderBytes = new byte[Constants.NONAME_HEADER_BYTES + nameLength];
+        cachedHeaderBytes[0] = idByte(); //setting the tag id which is always the first byte
+
+        //getting the two bytes indicating the name length as a short
         nameLengthBytes = ByteUtil.shortToBigEndianBytes(nameLength);
 
-        System.arraycopy(nameLengthBytes, 0, headerBytes, 1, nameLengthBytes.length);
+        //copy the name length 2 bytes into the header (1,2 pos)
+        System.arraycopy(nameLengthBytes, 0, cachedHeaderBytes, 1, nameLengthBytes.length);
 
-        //putting all the name bytes
+        //putting all the name UTF-8 bytes
         if (nameLength >= 0)
-            System.arraycopy(nameBytes, 0, headerBytes, Constants.NONAME_HEADER_BYTES, nameLength);
+            System.arraycopy(nameBytes, 0, cachedHeaderBytes, Constants.NONAME_HEADER_BYTES, nameLength);
         else
             throw new IllegalTagFormatException("Tag name length is zero");
 
         //defining where the actual payload starts
         payloadPosition = Constants.NONAME_HEADER_BYTES + nameLength;
 
+        //allocate the bytebuffer with all the needed bytes
         bb = ByteBuffer.allocate(payloadCapacity + payloadPosition);
-        bb.position(0);
-        bb.put(headerBytes);
 
+        //writing the header bytes, leaving the payload for the
+        //user to fill it with copyToPayload or fromJava methods.
+        bb.position(0);
+        bb.put(cachedHeaderBytes);
+
+        //wrap the user bytebuffer with the current
+        //internal bytebuffer backing array
         wrapUserByteBuffer();
     }
 
-    protected final void init(byte[] bytes, int typePayloadCapacity) throws UnmatchingTagIdException {
+    protected final void init(byte[] bytes, int typePayloadCapacity) throws IllegalTagFormatException {
         if(hasInit) return;
         hasInit = true;
 
@@ -82,12 +96,12 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         copyBytes(bytes);
     }
 
-    protected final void init(byte[] bytes) throws UnmatchingTagIdException {
+    protected final void init(byte[] bytes) throws IllegalTagFormatException {
         init(bytes, -1);
     }
 
     @Override
-    public void copyBytes(byte[] bytes) throws UnmatchingTagIdException {
+    public void copyBytes(byte[] bytes) throws IllegalTagFormatException {
         //bound check (we want the exact same amount of bytes the bytebuffer can handle)
         if(bytes.length > bb.capacity()) throw new BufferOverflowException();
         else if(bytes.length < bb.capacity()) throw new BufferUnderflowException();
@@ -123,6 +137,16 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         bb.put(bytes);
         wrapUserByteBuffer();
 
+        //redefining the cache arrays if we don't have the sizes we need
+        if(cachedPayloadBytes.length != payloadCapacity) {
+            cachedPayloadBytes = new byte[payloadCapacity];
+        }
+
+        int headerCapacity = bb.array().length - payloadCapacity;
+        if(cachedHeaderBytes.length != headerCapacity) {
+            cachedHeaderBytes = new byte[headerCapacity];
+        }
+
         //grabbing name bytes from header bytes basing from the specified name length
         byte[] nameBytes = grabHeaderBytes(nameLength, Constants.NONAME_HEADER_BYTES);
         //decoding the UTF-8 bytes into an actual string
@@ -139,7 +163,7 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
     @Override
     public final void position(int pos) {
-        bb.position(pos);
+        userByteBuffer.position(pos);
     }
 
     @Override
@@ -154,52 +178,57 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
     @Override
     public final byte[] bytes() {
-        return bb.array().clone();
+        return bb.array();
     }
 
     @Override
     public final byte[] headerBytes() {
         bb.position(0);
 
-        byte[] headerBytes = new byte[bb.array().length - payloadCapacity];
-        System.arraycopy(bb.array(), 0, headerBytes, 0, headerBytes.length);
+        System.arraycopy(bb.array(), 0, cachedHeaderBytes, 0, cachedHeaderBytes.length);
 
-        return headerBytes;
+        return cachedHeaderBytes;
+    }
+
+    public final byte[] cachedHeaderBytes() {
+        return cachedPayloadBytes;
     }
 
     public final byte grabHeaderByte(int byteIndex) {
-        return headerBytes()[byteIndex];
+        if(byteIndex > payloadPosition) throw new ArrayIndexOutOfBoundsException(byteIndex);
+        return bb.array()[byteIndex];
     }
 
     public final byte[] grabHeaderBytes(int grabAmount, int offset) {
         byte[] grabbedBytes = new byte[grabAmount];
-        byte[] headerBytes = headerBytes();
 
-        System.arraycopy(headerBytes, offset, grabbedBytes, 0, grabbedBytes.length);
+        for(int i = 0 ; i < grabAmount ; i++) {
+            grabbedBytes[i] = grabHeaderByte(i + offset);
+        }
 
         return grabbedBytes;
     }
 
     @Override
     public final byte[] payloadBytes() {
-        byte[] payloadBytes = new byte[payloadCapacity];
+        System.arraycopy(bb.array(), payloadPosition, cachedPayloadBytes, 0, payloadCapacity);
+        return cachedPayloadBytes;
+    }
 
-        System.arraycopy(bb.array(), payloadPosition, payloadBytes, 0, payloadCapacity);
-
-        return payloadBytes;
+    public final byte[] cachedPayloadBytes() {
+        return cachedPayloadBytes;
     }
 
     public final byte grabPayloadByte(int byteIndex) {
-        return payloadBytes()[byteIndex];
+        return bb.array()[byteIndex + payloadPosition];
     }
 
     public final byte[] grabPayloadBytes(int grabAmount, int offset) {
-
         byte[] grabbedBytes = new byte[grabAmount];
-        byte[] payloadBytes = payloadBytes();
 
-        if (grabAmount >= 0)
-            System.arraycopy(payloadBytes, offset, grabbedBytes, 0, grabAmount);
+        for(int i = 0 ; i < grabAmount ; i++) {
+            grabbedBytes[i] = grabPayloadByte(i + offset);
+        }
 
         return grabbedBytes;
     }

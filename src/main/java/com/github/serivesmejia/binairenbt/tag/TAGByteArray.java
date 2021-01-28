@@ -11,7 +11,13 @@ public class TAGByteArray extends ByteBufferTAG<Byte[]>{
         if(arrayCapacity < 1) throw new IllegalArgumentException("Capacity should be bigger than 0");
 
         capacityInt.fromJava(arrayCapacity);
+
         init(name, capacityInt.payloadCapacity() + arrayCapacity);
+
+        //moving to where the payload starts
+        bb.position(payloadPosition());
+        //put the 4 bytes telling the size of the array
+        bb.put(capacityInt.payloadBytes());
     }
 
     public TAGByteArray(byte[] bytes) {
@@ -36,10 +42,7 @@ public class TAGByteArray extends ByteBufferTAG<Byte[]>{
         else if(value.length < arrayCapacity())
             throw new ArrayIndexOutOfBoundsException("Java Byte[] is smaller than the NBT byte array");
 
-        bb.position(payloadPosition());
-
-        //put the 4 bytes telling the size of the array
-        bb.put(capacityInt.payloadBytes());
+        bb.position(payloadPosition() + capacityInt.payloadCapacity());
 
         //put the actual bytes
         for(Byte b : value) {

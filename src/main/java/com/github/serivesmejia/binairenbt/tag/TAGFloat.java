@@ -13,17 +13,18 @@ public class TAGFloat extends ByteBufferTAG<Float> {
 
     public TAGFloat(byte[] bytes) {
         init(bytes, Constants.TAG_FLOAT_PAYLOAD_CAPACITY);
+        bb.order(ByteOrder.BIG_ENDIAN);
     }
 
     @Override
     public Float toJava() {
-        position(payloadPosition());
+        bb.position(payloadPosition());
         return bb.getFloat();
     }
 
     @Override
     public void fromJava(Float value) {
-        position(payloadPosition());
+        bb.position(payloadPosition());
         bb.putFloat(value);
     }
 

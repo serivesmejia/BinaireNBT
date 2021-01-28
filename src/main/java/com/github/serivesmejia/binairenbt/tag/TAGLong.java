@@ -13,6 +13,7 @@ public class TAGLong extends ByteBufferTAG<Long> {
 
     public TAGLong(byte[] bytes) {
         init(bytes, Constants.TAG_LONG_PAYLOAD_CAPACITY);
+        bb.order(ByteOrder.BIG_ENDIAN);
     }
 
     @Override

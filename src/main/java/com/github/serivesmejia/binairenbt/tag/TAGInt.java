@@ -13,6 +13,7 @@ public class TAGInt extends ByteBufferTAG<Integer> {
 
     public TAGInt(byte[] bytes) {
         init(bytes, Constants.TAG_INT_PAYLOAD_CAPACITY);
+        bb.order(ByteOrder.BIG_ENDIAN);
     }
 
     @Override

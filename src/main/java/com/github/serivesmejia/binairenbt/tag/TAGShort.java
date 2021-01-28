@@ -13,17 +13,18 @@ public class TAGShort extends ByteBufferTAG<Short> {
 
     public TAGShort(byte[] bytes)  {
         init(bytes, Constants.TAG_SHORT_PAYLOAD_CAPACITY);
+        bb.order(ByteOrder.BIG_ENDIAN);
     }
 
     @Override
     public Short toJava() {
-        position(payloadPosition());
+        bb.position(payloadPosition());
         return bb.getShort();
     }
 
     @Override
     public void fromJava(Short value) {
-        position(payloadPosition());
+        bb.position(payloadPosition());
         bb.putShort(value);
     }
 
