@@ -17,7 +17,7 @@ public class TAGByteArray extends ByteBufferTAG<Byte[]>{
     public TAGByteArray(byte[] bytes) {
         init(bytes);
         //grab the array capacity from the first 4 bytes of this tag's payload
-        capacityInt.copyToPayload(grabPayloadBytes(capacityInt.payloadCapacity(), 0));
+        capacityInt.copyToPayloadBytes(grabPayloadBytes(capacityInt.payloadCapacity(), 0));
 
         if(arrayCapacity() < 1) throw new IllegalTagFormatException("Capacity should be bigger than 0");
     }

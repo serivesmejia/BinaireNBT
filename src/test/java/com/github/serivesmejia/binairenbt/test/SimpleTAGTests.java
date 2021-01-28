@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class TAGTests {
+public class SimpleTAGTests {
 
     @Test
     public void TestTagByte() throws IllegalTagFormatException {
@@ -15,10 +15,10 @@ public class TAGTests {
         TAGByte tagNbt = new TAGByte("byteTag");
         tagNbt.fromJava(lng);
 
-        TAGByte sameTagNbt = new TAGByte("sameByteTag");
-        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
+        TAGByte sameTagNbt = new TAGByte(tagNbt.bytes());
 
         assertEquals(lng, (byte)sameTagNbt.toJava());
+        assertEquals(tagNbt.name(), sameTagNbt.name());
     }
 
     @Test
@@ -28,10 +28,10 @@ public class TAGTests {
         TAGShort tagNbt = new TAGShort("shortTag");
         tagNbt.fromJava(lng);
 
-        TAGShort sameTagNbt = new TAGShort("sameShortTag");
-        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
+        TAGShort sameTagNbt = new TAGShort(tagNbt.bytes());
 
         assertEquals(lng, (short)sameTagNbt.toJava());
+        assertEquals(tagNbt.name(), sameTagNbt.name());
     }
 
     @Test
@@ -41,23 +41,23 @@ public class TAGTests {
         TAGInt tagNbt = new TAGInt("intTag");
         tagNbt.fromJava(lng);
 
-        TAGInt sameTagNbt = new TAGInt("sameIntTag");
-        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
+        TAGInt sameTagNbt = new TAGInt(tagNbt.bytes());
 
         assertEquals(lng, (int)sameTagNbt.toJava());
+        assertEquals(tagNbt.name(), sameTagNbt.name());
     }
 
     @Test
     public void TestTagLong() throws IllegalTagFormatException {
         long lng = 26720;
 
-        TAGLong longNbt = new TAGLong("longTag");
-        longNbt.fromJava(lng);
+        TAGLong tagNbt = new TAGLong("longTag");
+        tagNbt.fromJava(lng);
 
-        TAGLong sameLongNbt = new TAGLong("sameLongTag");
-        sameLongNbt.copyToPayload(longNbt.payloadBytes());
+        TAGLong sameTagNbt = new TAGLong(tagNbt.bytes());
 
-        assertEquals(lng, (long)sameLongNbt.toJava());
+        assertEquals(lng, (long)sameTagNbt.toJava());
+        assertEquals(tagNbt.name(), sameTagNbt.name());
     }
 
     @Test
@@ -67,10 +67,10 @@ public class TAGTests {
         TAGFloat tagNbt = new TAGFloat("floatTag");
         tagNbt.fromJava(lng);
 
-        TAGFloat sameTagNbt = new TAGFloat("sameFloatTag");
-        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
+        TAGFloat sameTagNbt = new TAGFloat(tagNbt.bytes());
 
         assertEquals(lng, sameTagNbt.toJava(), 0);
+        assertEquals(tagNbt.name(), sameTagNbt.name());
     }
 
     @Test
@@ -80,10 +80,10 @@ public class TAGTests {
         TAGDouble tagNbt = new TAGDouble("doubleTag");
         tagNbt.fromJava(lng);
 
-        TAGDouble sameTagNbt = new TAGDouble("sameDoubleTag");
-        sameTagNbt.copyToPayload(tagNbt.payloadBytes());
+        TAGDouble sameTagNbt = new TAGDouble(tagNbt.bytes());
 
         assertEquals(lng, sameTagNbt.toJava(), 0);
+        assertEquals(tagNbt.name(), sameTagNbt.name());
     }
 
     @Test

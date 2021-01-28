@@ -7,8 +7,8 @@ public interface TAG<T> {
     T toJava();
     void fromJava(T value);
 
-    void copyToPayload(byte[] bytes);
-    void fromBytes(byte[] bytes) throws UnmatchingTagIdException;
+    void copyToPayloadBytes(byte[] bytes);
+    void copyBytes(byte[] bytes) throws UnmatchingTagIdException;
 
     void position(int position);
 

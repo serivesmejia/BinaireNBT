@@ -14,6 +14,8 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
     protected ByteBuffer bb;
 
+    private ByteBuffer userByteBuffer = null;
+
     private int payloadPosition;
 
     private short nameLength;
@@ -66,6 +68,8 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         bb = ByteBuffer.allocate(payloadCapacity + payloadPosition);
         bb.position(0);
         bb.put(headerBytes);
+
+        wrapUserByteBuffer();
     }
 
     protected final void init(byte[] bytes, int typePayloadCapacity) throws UnmatchingTagIdException {
@@ -75,7 +79,7 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         this.typePayloadCapacity = typePayloadCapacity;
 
         bb = ByteBuffer.allocate(bytes.length);
-        fromBytes(bytes);
+        copyBytes(bytes);
     }
 
     protected final void init(byte[] bytes) throws UnmatchingTagIdException {
@@ -83,7 +87,7 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
     }
 
     @Override
-    public void fromBytes(byte[] bytes) throws UnmatchingTagIdException {
+    public void copyBytes(byte[] bytes) throws UnmatchingTagIdException {
         //bound check (we want the exact same amount of bytes the bytebuffer can handle)
         if(bytes.length > bb.capacity()) throw new BufferOverflowException();
         else if(bytes.length < bb.capacity()) throw new BufferUnderflowException();
@@ -101,13 +105,12 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
         //defining the actual payload capacity
         //(if we have a >= 0 typePayloadCapacity we use that,
-        //since that means we have how big this type should
-        //actually be and that's our best bet and we enforce that)
-        if(typePayloadCapacity > -1) {
+        //since that means we know how big this type should
+        //actually be and that's our best bet, so we enforce that)
+        if(typePayloadCapacity >= 0) {
             //using the type capacity
             payloadCapacity = typePayloadCapacity;
-
-            if(payloadCapacity > bytes.length - payloadPosition) {
+            if(bytes.length - payloadPosition > payloadCapacity) {
                 throw new IllegalTagFormatException("Amount of given bytes is bigger than this tag's payload capacity");
             }
         } else {
@@ -118,6 +121,7 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         //putting the actual bytes into the ByteBuffer
         bb.position(0);
         bb.put(bytes);
+        wrapUserByteBuffer();
 
         //grabbing name bytes from header bytes basing from the specified name length
         byte[] nameBytes = grabHeaderBytes(nameLength, Constants.NONAME_HEADER_BYTES);
@@ -126,7 +130,7 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
     }
 
     @Override
-    public void copyToPayload(byte[] bytes) {
+    public void copyToPayloadBytes(byte[] bytes) {
         assertInRange(bytes.length);
 
         bb.position(payloadPosition);
@@ -140,12 +144,12 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
     @Override
     public final byte readByte() {
-        return bb.get();
+        return userByteBuffer.get();
     }
 
     @Override
     public final byte readByte(int byteIndex) {
-        return bb.get(byteIndex);
+        return userByteBuffer.get(byteIndex);
     }
 
     @Override
@@ -226,12 +230,17 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
     }
 
     public final ByteBuffer byteBuffer() {
-        return bb;
+        wrapUserByteBuffer();
+        return userByteBuffer;
     }
 
     protected void assertInRange(int index) {
         if(index > payloadCapacity()) throw new BufferOverflowException();
         else if(index < payloadCapacity()) throw new BufferUnderflowException();
+    }
+
+    private void wrapUserByteBuffer() {
+        if(bb != null) userByteBuffer = ByteBuffer.wrap(bb.array());
     }
 
 }
