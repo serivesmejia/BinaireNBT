@@ -1,16 +1,17 @@
 package com.github.serivesmejia.binairenbt.test;
 
+import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
 import com.github.serivesmejia.binairenbt.tag.*;
 import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class TAGTests {
 
     @Test
-    public void TestTagByte() {
+    public void TestTagByte() throws IllegalTagFormatException {
         byte lng = 9;
 
         TAGByte tagNbt = new TAGByte("byteTag");
@@ -23,7 +24,7 @@ public class TAGTests {
     }
 
     @Test
-    public void TestTagShort() {
+    public void TestTagShort() throws IllegalTagFormatException {
         short lng = 9;
 
         TAGShort tagNbt = new TAGShort("shortTag");
@@ -36,12 +37,11 @@ public class TAGTests {
     }
 
     @Test
-    public void TestTagInt() {
+    public void TestTagInt() throws IllegalTagFormatException {
         int lng = 9;
 
         TAGInt tagNbt = new TAGInt("intTag");
         tagNbt.fromJava(lng);
-        System.out.println(Arrays.toString(tagNbt.bytes()));
 
         TAGInt sameTagNbt = new TAGInt("sameIntTag");
         sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
@@ -50,7 +50,7 @@ public class TAGTests {
     }
 
     @Test
-    public void TestTagLong() {
+    public void TestTagLong() throws IllegalTagFormatException {
         long lng = 26720;
 
         TAGLong longNbt = new TAGLong("longTag");
@@ -63,7 +63,7 @@ public class TAGTests {
     }
 
     @Test
-    public void TestTagFloat() {
+    public void TestTagFloat() throws IllegalTagFormatException {
         float lng = 9.2f;
 
         TAGFloat tagNbt = new TAGFloat("floatTag");
@@ -76,7 +76,7 @@ public class TAGTests {
     }
 
     @Test
-    public void TestTagDouble() {
+    public void TestTagDouble() throws IllegalTagFormatException {
         double lng = 23.5;
 
         TAGDouble tagNbt = new TAGDouble("doubleTag");
@@ -86,6 +86,21 @@ public class TAGTests {
         sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
 
         assertEquals(lng, sameTagNbt.toJava(), 0);
+    }
+
+    @Test
+    public void TestTagByteArray() throws IllegalTagFormatException {
+        Byte[] lng = new Byte[] {9, 2, 3, 1};
+
+        TAGByteArray tagNbt = new TAGByteArray("byteArrayTag", 4);
+        tagNbt.fromJava(lng);
+
+        TAGByteArray sameTagNbt = new TAGByteArray("sameByteArrayTag", 4);
+        sameTagNbt.fromPayloadBytes(tagNbt.payloadBytes());
+
+        System.out.println(Arrays.toString(sameTagNbt.toJava()));
+
+        assertArrayEquals(lng, sameTagNbt.toJava());
     }
 
 }

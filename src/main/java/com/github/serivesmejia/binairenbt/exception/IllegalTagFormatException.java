@@ -1,11 +1,11 @@
 package com.github.serivesmejia.binairenbt.exception;
 
-public class UnmatchingTagIdException extends Exception {
-    public UnmatchingTagIdException() {
+public class IllegalTagFormatException extends RuntimeException {
+    public IllegalTagFormatException() {
         super();
     }
 
-    public UnmatchingTagIdException(String message) {
+    public IllegalTagFormatException(String message) {
         super(message);
     }
 }

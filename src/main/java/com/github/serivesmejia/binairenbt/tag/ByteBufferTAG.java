@@ -1,56 +1,73 @@
 package com.github.serivesmejia.binairenbt.tag;
 
 import com.github.serivesmejia.binairenbt.Constants;
+import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
 import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
+import com.github.serivesmejia.binairenbt.util.ByteUtil;
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 
 public abstract class ByteBufferTAG<T> implements TAG<T>{
 
     protected ByteBuffer bb;
 
-    protected int payloadPosition;
-    protected short nameLength;
+    private int payloadPosition;
 
-    protected String name;
+    private short nameLength;
+    private byte[] nameLengthBytes = new byte[2];
 
-    protected byte[] nameBytes;
-    protected byte[] prePayloadBytes;
+    private String name;
+    private byte[] nameBytes;
 
-    protected int capacity = 0;
+    private byte[] headerBytes;
+
+    private int payloadCapacity = 0;
+    protected int typePayloadCapacity = -1;
 
     private boolean hasInit = false;
 
-    protected final void init(String name, int capacity) {
+    protected final void init(String name, int payloadCapacity) throws IllegalTagFormatException {
         if(hasInit) return;
         hasInit = true;
 
         this.name = name;
-        this.capacity = capacity;
+        this.payloadCapacity = payloadCapacity;
+        this.typePayloadCapacity = payloadCapacity;
 
+        //convert the name string to an UTF_8 byte array
         nameBytes = name.getBytes(StandardCharsets.UTF_8);
+
+        //name length shouldn't be bigger than a 2-byte short
+        if(nameBytes.length > Short.MAX_VALUE) {
+            throw new IllegalArgumentException("TAG name is bigger than 2-byte short max value (" + String.valueOf(Short.MAX_VALUE) + ")");
+        }
+
+        //get name length as short
         nameLength = (short) nameBytes.length;
 
-        prePayloadBytes = new byte[Constants.PRE_PAYLOAD_BYTES + nameLength];
-        prePayloadBytes[0] = idAsByte();
+        headerBytes = new byte[Constants.NONAME_HEADER_BYTES + nameLength];
+        headerBytes[0] = idByte();
 
-        ByteBuffer nameLengthBB = ByteBuffer.allocate(2);
-        nameLengthBB.order(ByteOrder.BIG_ENDIAN);
-        nameLengthBB.putShort(nameLength);
+        //putting the two bytes indicating the name length
+        nameLengthBytes = ByteUtil.shortToBigEndianBytes(nameLength);
 
-        prePayloadBytes[1] = nameLengthBB.get(0);
-        prePayloadBytes[2] = nameLengthBB.get(1);
+        for(int i = 0 ; i < nameLengthBytes.length ; i++) {
+            headerBytes[i + 1] = nameLengthBytes[i];
+        }
 
+        //putting all the name bytes
         if (nameLength >= 0)
-            System.arraycopy(nameBytes, 0, prePayloadBytes, Constants.PRE_PAYLOAD_BYTES, nameLength);
+            System.arraycopy(nameBytes, 0, headerBytes, Constants.NONAME_HEADER_BYTES, nameLength);
+        else
+            throw new IllegalTagFormatException("Tag name length is zero");
 
-        payloadPosition = Constants.PRE_PAYLOAD_BYTES + nameLength;
+        //defining where the actual payload starts
+        payloadPosition = Constants.NONAME_HEADER_BYTES + nameLength;
 
-        bb = ByteBuffer.allocate(capacity + payloadPosition);
+        bb = ByteBuffer.allocate(payloadCapacity + payloadPosition);
     }
 
     protected final void init(byte[] bytes) throws UnmatchingTagIdException {
@@ -66,22 +83,22 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         if(bytes.length > bb.capacity()) throw new BufferOverflowException();
         else if(bytes.length < bb.capacity()) throw new BufferUnderflowException();
 
-        int id = bytes[0];
-
-        if(id != id())
+        //ID check to see if we're actually dealing with the correct type
+        //(ID should always be the first byte)
+        if(bytes[0] != idByte())
             throw new UnmatchingTagIdException("TAG ID from given bytes does not match with this tag (" + this.getClass().getSimpleName() + ")");
 
-        ByteBuffer nameLengthBB = ByteBuffer.allocate(2);
-        nameLengthBB.order(ByteOrder.BIG_ENDIAN);
-        nameLengthBB.put(bytes[1]);
-        nameLengthBB.put(bytes[2]);
+        nameLength = ByteUtil.bigEndianBytesToShort(new byte[] {bytes[1], bytes[2]});
+        headerBytes = new byte[Constants.NONAME_HEADER_BYTES + nameLength];
 
-        nameLength = nameLengthBB.getShort();
+        if (headerBytes.length >= 0)
+            System.arraycopy(bytes, 0, headerBytes, 0, headerBytes.length);
 
-        prePayloadBytes = new byte[Constants.PRE_PAYLOAD_BYTES + nameLength];
+        int payloadBytesAmount = bytes.length - headerBytes.length;
 
-        if (prePayloadBytes.length >= 0)
-            System.arraycopy(bytes, 0, prePayloadBytes, 0, prePayloadBytes.length);
+        if(payloadBytesAmount > typePayloadCapacity && typePayloadCapacity != -1) {
+
+        }
 
         bb.position(0);
         bb.put(bytes);
@@ -91,8 +108,7 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
     public void fromPayloadBytes(byte[] bytes) {
         assertInRange(bytes.length);
 
-        bb.position(0);
-        bb.put(prePayloadBytes);
+        bb.position(payloadPosition);
         bb.put(bytes);
     }
 
@@ -117,22 +133,59 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
     }
 
     @Override
-    public final byte[] payloadBytes() {
-        byte[] payloadBytes = new byte[capacity];
+    public final byte[] headerBytes() {
+        return headerBytes.clone();
+    }
 
-        if (capacity >= 0)
-            System.arraycopy(bb.array(), payloadPosition, payloadBytes, 0, capacity);
+    @Override
+    public final byte[] payloadBytes() {
+        byte[] payloadBytes = new byte[payloadCapacity];
+
+        if (payloadCapacity >= 0)
+            System.arraycopy(bb.array(), payloadPosition, payloadBytes, 0, payloadCapacity);
 
         return payloadBytes;
     }
 
-    @Override
-    public final int payloadSize() {
-        return capacity;
+    public final byte grabPayloadByte(int byteIndex) {
+        return payloadBytes()[byteIndex];
     }
 
-    public final byte idAsByte() {
-        return (byte) id();
+    public final byte[] grabPayloadBytes(int grabAmount, int offset) {
+
+        byte[] grabbedBytes = new byte[grabAmount];
+        byte[] payloadBytes = payloadBytes();
+
+        for(int i = 0 ; i < grabAmount ; i++) {
+            grabbedBytes[i] = payloadBytes[i + offset];
+        }
+
+        return grabbedBytes;
+    }
+
+    @Override
+    public final int payloadCapacity() {
+        return payloadCapacity;
+    }
+
+    @Override
+    public final int payloadPosition() {
+        return payloadPosition;
+    }
+
+    @Override
+    public final String name() {
+        return name;
+    }
+
+    @Override
+    public final byte[] nameBytes() {
+        return nameBytes.clone();
+    }
+
+    @Override
+    public byte[] nameLengthBytes() {
+        return nameLengthBytes.clone();
     }
 
     public final ByteBuffer byteBuffer() {
@@ -140,8 +193,8 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
     }
 
     protected void assertInRange(int index) {
-        if(index > payloadSize()) throw new BufferOverflowException();
-        else if(index < payloadSize()) throw new BufferUnderflowException();
+        if(index > payloadCapacity()) throw new BufferOverflowException();
+        else if(index < payloadCapacity()) throw new BufferUnderflowException();
     }
 
 }

@@ -16,10 +16,22 @@ public interface TAG<T> {
     byte readByte(int byteIndex);
 
     byte[] bytes();
+    byte[] headerBytes();
     byte[] payloadBytes();
 
-    int payloadSize();
+    int payloadCapacity();
+    int payloadPosition();
+
+
+    String name();
+    byte[] nameBytes();
+
+    byte[] nameLengthBytes();
 
     int id();
+
+    default byte idByte() {
+        return (byte)id();
+    }
 
 }

@@ -1,31 +1,30 @@
 package com.github.serivesmejia.binairenbt.tag;
 
-import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
+import com.github.serivesmejia.binairenbt.Constants;
 
 import java.nio.ByteOrder;
 
 public class TAGFloat extends ByteBufferTAG<Float> {
 
     public TAGFloat(String name) {
-        init(name, 4);
+        init(name, Constants.TAG_FLOAT_PAYLOAD_CAPACITY);
         bb.order(ByteOrder.BIG_ENDIAN);
     }
 
-    public TAGFloat(byte[] bytes) throws UnmatchingTagIdException {
+    public TAGFloat(byte[] bytes) {
+        typePayloadCapacity = Constants.TAG_FLOAT_PAYLOAD_CAPACITY;
         init(bytes);
     }
 
     @Override
     public Float toJava() {
-        position(payloadPosition);
+        position(payloadPosition());
         return bb.getFloat();
     }
 
     @Override
     public void fromJava(Float value) {
-        position(0);
-
-        bb.put(prePayloadBytes);
+        position(payloadPosition());
         bb.putFloat(value);
     }
 

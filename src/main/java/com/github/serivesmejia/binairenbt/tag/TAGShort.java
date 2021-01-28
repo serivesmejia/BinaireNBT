@@ -1,31 +1,30 @@
 package com.github.serivesmejia.binairenbt.tag;
 
-import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
+import com.github.serivesmejia.binairenbt.Constants;
 
 import java.nio.ByteOrder;
 
 public class TAGShort extends ByteBufferTAG<Short> {
 
     public TAGShort(String name) {
-        init(name, 2);
+        init(name, Constants.TAG_SHORT_PAYLOAD_CAPACITY);
         bb.order(ByteOrder.BIG_ENDIAN);
     }
 
-    public TAGShort(byte[] bytes) throws UnmatchingTagIdException {
+    public TAGShort(byte[] bytes)  {
+        typePayloadCapacity = Constants.TAG_SHORT_PAYLOAD_CAPACITY;
         init(bytes);
     }
 
     @Override
     public Short toJava() {
-        position(payloadPosition);
+        position(payloadPosition());
         return bb.getShort();
     }
 
     @Override
     public void fromJava(Short value) {
-        position(0);
-
-        bb.put(prePayloadBytes);
+        position(payloadPosition());
         bb.putShort(value);
     }
 
