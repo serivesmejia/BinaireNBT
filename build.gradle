@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+group 'com.github.serivesmejia'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+}
