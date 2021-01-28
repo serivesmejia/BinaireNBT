@@ -1,12 +1,15 @@
 package com.github.serivesmejia.binairenbt.tag;
 
+import com.github.serivesmejia.binairenbt.Constants;
+import com.github.serivesmejia.binairenbt.util.ByteUtil;
+
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.charset.StandardCharsets;
 
 public class TAGString extends ByteBufferTAG<String> {
 
-    private TAGShort shortStringBytesLength = new TAGShort("stringLength");
+    private byte[] bytesStringBytesLength = new byte[Constants.TAG_SHORT_PAYLOAD_CAPACITY];
 
     public TAGString(String name, String string) {
         this(name, (short) string.getBytes(StandardCharsets.UTF_8).length);
@@ -14,23 +17,23 @@ public class TAGString extends ByteBufferTAG<String> {
     }
 
     public TAGString(String name, short stringBytesLength) {
-        shortStringBytesLength.fromJava(stringBytesLength);
+        bytesStringBytesLength = ByteUtil.unsignedShortToBigEndianBytes(stringBytesLength);
 
-        init(name, shortStringBytesLength.payloadCapacity() + stringBytesLength);
+        init(name, bytesStringBytesLength.length + stringBytesLength);
         bb.position(payloadPosition());
-        bb.put(shortStringBytesLength.payloadBytes());
+        bb.put(bytesStringBytesLength);
     }
 
     public TAGString(byte[] bytes)  {
         init(bytes);
         //grab the string length from the first 4 bytes of this tag's payload
-        shortStringBytesLength.copyToPayloadBytes(grabPayloadBytes(shortStringBytesLength.payloadCapacity(), 0));
+        bytesStringBytesLength = grabPayloadBytes(bytesStringBytesLength.length, 0);
     }
 
     @Override
     public String toJava() {
         //grab the actual utf-8 string bytes starting from where the 4 string length bytes end
-        byte[] stringBytes = grabPayloadBytes(stringBytesLength(), shortStringBytesLength.payloadCapacity());
+        byte[] stringBytes = grabPayloadBytes(stringBytesLength(), bytesStringBytesLength.length);
         return new String(stringBytes, StandardCharsets.UTF_8);
     }
 
@@ -45,12 +48,12 @@ public class TAGString extends ByteBufferTAG<String> {
         else if(stringBytes.length < stringBytesLength())
             throw new BufferUnderflowException();
 
-        bb.position(payloadPosition() + shortStringBytesLength.payloadCapacity());
+        bb.position(payloadPosition() +  bytesStringBytesLength.length);
         bb.put(stringBytes);
     }
 
     public final short stringBytesLength() {
-        return shortStringBytesLength.toJava();
+        return ByteUtil.bigEndianBytesToUnsignedShort(bytesStringBytesLength);
     }
 
     @Override

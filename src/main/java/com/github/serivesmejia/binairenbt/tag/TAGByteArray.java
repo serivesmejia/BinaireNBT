@@ -5,7 +5,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 public class TAGByteArray extends ByteBufferTAG<Byte[]>{
 
-    TAGInt capacityInt = new TAGInt("capacityInt");
+    TAGInt capacityInt = new TAGInt("_");
 
     public TAGByteArray(String name, int arrayCapacity) {
         if(arrayCapacity < 1) throw new IllegalArgumentException("Capacity should be bigger than 0");
