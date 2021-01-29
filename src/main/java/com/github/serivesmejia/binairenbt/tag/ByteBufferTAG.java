@@ -4,6 +4,7 @@ import com.github.serivesmejia.binairenbt.Constants;
 import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
 import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
 import com.github.serivesmejia.binairenbt.util.ByteUtil;
+import com.github.serivesmejia.binairenbt.util.nbt.NBTHeaderBuilder;
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
@@ -18,7 +19,6 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
     private int payloadPosition;
 
-    private short nameLength;
     private byte[] nameLengthBytes = new byte[2];
 
     private String name;
@@ -40,38 +40,15 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         this.payloadCapacity = payloadCapacity;
         this.typePayloadCapacity = payloadCapacity;
 
-        //convert the name string to an UTF_8 byte array
-        nameBytes = name.getBytes(StandardCharsets.UTF_8);
+        NBTHeaderBuilder headerBuilder = new NBTHeaderBuilder();
 
-        //name length shouldn't be bigger than a 2-byte short
-        if(nameBytes.length > Short.MAX_VALUE) {
-            throw new IllegalArgumentException("TAG name is bigger than 2-byte short max value (" + String.valueOf(Short.MAX_VALUE) + ")");
-        }
+        cachedHeaderBytes = headerBuilder.setTagId(idByte())
+                            .setName(name)
+                            .build();
 
-        //get name utf-8 bytes length as 2-byte short
-        nameLength = (short) nameBytes.length;
-
-        //defining the cached payload array
-        cachedPayloadBytes = new byte[payloadCapacity];
-
-        //defining the header bytes
-        cachedHeaderBytes = new byte[Constants.NONAME_HEADER_BYTES + nameLength];
-        cachedHeaderBytes[0] = idByte(); //setting the tag id which is always the first byte
-
-        //getting the two bytes indicating the name length as a short
-        nameLengthBytes = ByteUtil.shortToBigEndianBytes(nameLength);
-
-        //copy the name length 2 bytes into the header (1,2 pos)
-        System.arraycopy(nameLengthBytes, 0, cachedHeaderBytes, 1, nameLengthBytes.length);
-
-        //putting all the name UTF-8 bytes
-        if (nameLength >= 0)
-            System.arraycopy(nameBytes, 0, cachedHeaderBytes, Constants.NONAME_HEADER_BYTES, nameLength);
-        else
-            throw new IllegalTagFormatException("Tag name length is zero");
-
-        //defining where the actual payload starts
-        payloadPosition = Constants.NONAME_HEADER_BYTES + nameLength;
+        payloadPosition = cachedHeaderBytes.length;
+        nameBytes = headerBuilder.getNameBytes();
+        nameLengthBytes = headerBuilder.getNameLengthBytes();
 
         //allocate the bytebuffer with all the needed bytes
         bb = ByteBuffer.allocate(payloadCapacity + payloadPosition);
@@ -80,6 +57,15 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         //user to fill it with copyToPayload or fromJava methods.
         bb.position(0);
         bb.put(cachedHeaderBytes);
+
+        //redefining the cache arrays if we don't have the sizes we need
+        if(cachedPayloadBytes.length != payloadCapacity) {
+            cachedPayloadBytes = new byte[payloadCapacity];
+        }
+        int headerCapacity = bb.array().length - payloadCapacity;
+        if(cachedHeaderBytes.length != headerCapacity) {
+            cachedHeaderBytes = new byte[headerCapacity];
+        }
 
         //wrap the user bytebuffer with the current
         //internal bytebuffer backing array
@@ -112,7 +98,7 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
             throw new UnmatchingTagIdException("TAG ID "+ bytes[0] +" from given bytes does not match with this tag ( " + idByte() + " " + this.getClass().getSimpleName() + ")");
 
         //getting the name length from the 2nd and 3rd bytes, short
-        nameLength = ByteUtil.bigEndianBytesToShort(new byte[] {bytes[1], bytes[2]});
+        short nameLength = ByteUtil.bigEndianBytesToShort(new byte[]{bytes[1], bytes[2]});
 
         //defining the payload starting position (should be exactly at the header ending)
         payloadPosition = (Constants.NONAME_HEADER_BYTES + nameLength);

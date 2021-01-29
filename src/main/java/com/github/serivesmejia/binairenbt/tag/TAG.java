@@ -4,6 +4,50 @@ import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
 
 public interface TAG<T> {
 
+    enum Type {
+        END(0, TAGEnd.class),
+        BYTE(1, TAGByte.class),
+        SHORT(2, TAGShort.class),
+        INT(3, TAGInt.class),
+        LONG(4, TAGLong.class),
+        FLOAT(5, TAGFloat.class),
+        DOUBLE(6, TAGDouble.class),
+        BYTE_ARRAY(7, TAGByteArray.class),
+        STRING(8, TAGString.class),
+        LIST(9, TAGList.class),
+        COMPOUND(10, null),
+        INT_ARRAY(11, null),
+        LONG_ARRAY(12, null);
+
+        public final int id;
+        public final Class clazz;
+
+        Type(int id, Class<? extends TAG> clazz) {
+            this.id = id;
+            this.clazz = clazz;
+        }
+
+        public static Type fromId(int typeId) {
+            for(Type val : values()) {
+                if(val.id == typeId) {
+                    return val;
+                }
+            }
+
+            return null;
+        }
+
+        public static Type fromClass(Class<?> clazz) {
+            for(Type val : values()) {
+                if(val.clazz == clazz) {
+                    return val;
+                }
+            }
+
+            return null;
+        }
+    }
+
     T toJava();
     void fromJava(T value);
 
