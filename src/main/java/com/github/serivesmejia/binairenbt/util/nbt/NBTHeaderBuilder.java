@@ -20,6 +20,7 @@ public class NBTHeaderBuilder {
      */
     public NBTHeaderBuilder setTagId(byte tagId) {
         if(bb != null) {
+            //if we have a byte buffer, update the tag id byte on it
             bb.position(0);
             bb.put(tagId);
         }
@@ -47,14 +48,22 @@ public class NBTHeaderBuilder {
             throw new IllegalArgumentException("Name cannot be empty!");
         }
 
+        //bit hacky but works for simulating
+        //an unsigned short in java
         char nameLengthBytes = (char)nameBytes.length;
 
         bb = ByteBuffer.allocate(Constants.NONAME_HEADER_BYTES + nameBytes.length);
 
+        //basically build the header here
+        //first byte: the tag id
         bb.put(tagId);
+        //second byte: 2 bytes unsigned short indicating the size of the name
         bb.putChar(nameLengthBytes);
+        //rest of the bytes: the name bytes in utf-8
         bb.put(nameBytes);
 
+        //putting the name length in bytes onto another array
+        //for user usage
         this.nameLengthBytes[0] = bb.get(1);
         this.nameLengthBytes[1] = bb.get(2);
 
