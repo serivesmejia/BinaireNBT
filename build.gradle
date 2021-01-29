@@ -13,7 +13,6 @@ repositories {
 dependencies {
     testImplementation 'junit:junit:4.12'
     implementation 'org.apache.commons:commons-lang3:3.11'
-    implementation 'com.google.guava:guava:30.1-jre'
 }
 
 apply from: 'test.logging.gradle'
