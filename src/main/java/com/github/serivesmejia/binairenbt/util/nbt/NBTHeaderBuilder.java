@@ -45,7 +45,7 @@ public class NBTHeaderBuilder {
         if(nameBytes.length > Character.MAX_VALUE) {
             throw new IllegalArgumentException("Name length in bytes cannot be bigger than " + Character.MAX_VALUE);
         } else if(nameBytes.length <= 0) {
-            throw new IllegalArgumentException("Name cannot be empty!");
+            throw new IllegalArgumentException("Name cannot be empty");
         }
 
         //bit hacky but works for simulating
@@ -62,8 +62,8 @@ public class NBTHeaderBuilder {
         //rest of the bytes: the name bytes in utf-8
         bb.put(nameBytes);
 
-        //putting the name length in bytes onto another array
-        //for user usage
+        //putting the name length in bytes onto
+        //another array for user usage
         this.nameLengthBytes[0] = bb.get(1);
         this.nameLengthBytes[1] = bb.get(2);
 

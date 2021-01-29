@@ -2,14 +2,12 @@ package com.github.serivesmejia.binairenbt.tag;
 
 import com.github.serivesmejia.binairenbt.Constants;
 import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
-import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
-import com.github.serivesmejia.binairenbt.util.ByteUtil;
 import com.github.serivesmejia.binairenbt.util.nbt.NBTHeaderBuilder;
+import com.github.serivesmejia.binairenbt.util.nbt.NBTSimpleTagParser;
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 public abstract class ByteBufferTAG<T> implements TAG<T>{
 
@@ -53,19 +51,12 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         //allocate the bytebuffer with all the needed bytes
         bb = ByteBuffer.allocate(payloadCapacity + payloadPosition);
 
-        //writing the header bytes, leaving the payload for the
+        //writing the header bytes, leaving the payload empty for the
         //user to fill it with copyToPayload or fromJava methods.
         bb.position(0);
         bb.put(cachedHeaderBytes);
 
-        //redefining the cache arrays if we don't have the sizes we need
-        if(cachedPayloadBytes.length != payloadCapacity) {
-            cachedPayloadBytes = new byte[payloadCapacity];
-        }
-        int headerCapacity = bb.array().length - payloadCapacity;
-        if(cachedHeaderBytes.length != headerCapacity) {
-            cachedHeaderBytes = new byte[headerCapacity];
-        }
+        redefineCacheArrays();
 
         //wrap the user bytebuffer with the current
         //internal bytebuffer backing array
@@ -92,51 +83,18 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         if(bytes.length > bb.capacity()) throw new BufferOverflowException();
         else if(bytes.length < bb.capacity()) throw new BufferUnderflowException();
 
-        //ID check to see if we're actually dealing with the correct type
-        //(ID should always be the first byte)
-        if(bytes[0] != idByte())
-            throw new UnmatchingTagIdException("TAG ID "+ bytes[0] +" from given bytes does not match with this tag ( " + idByte() + " " + this.getClass().getSimpleName() + ")");
+        NBTSimpleTagParser parser = new NBTSimpleTagParser(bytes, typePayloadCapacity);
 
-        //getting the name length from the 2nd and 3rd bytes, short
-        short nameLength = ByteUtil.bigEndianBytesToShort(new byte[]{bytes[1], bytes[2]});
+        payloadCapacity = parser.getPayloadCapacity();
+        payloadPosition = parser.getPayloadStartPosition();
 
-        //defining the payload starting position (should be exactly at the header ending)
-        payloadPosition = (Constants.NONAME_HEADER_BYTES + nameLength);
+        name = parser.getName();
+        nameLengthBytes = parser.getNameBytesLengthInBytes();
 
-        //defining the actual payload capacity
-        //(if we have a >= 0 typePayloadCapacity we use that,
-        //since that means we know how big this type should
-        //actually be and that's our best bet, so we enforce that)
-        if(typePayloadCapacity >= 0) {
-            //using the type capacity
-            payloadCapacity = typePayloadCapacity;
-            if(bytes.length - payloadPosition > payloadCapacity) {
-                throw new IllegalTagFormatException("Amount of given bytes is bigger than this tag's payload capacity");
-            }
-        } else {
-            //using some determined capacity based on header length
-            payloadCapacity = bytes.length - payloadPosition;
-        }
+        //wrap the given bytes after parsing
+        bb = ByteBuffer.wrap(bytes);
 
-        //putting the actual bytes into the ByteBuffer
-        bb.position(0);
-        bb.put(bytes);
-        wrapUserByteBuffer();
-
-        //redefining the cache arrays if we don't have the sizes we need
-        if(cachedPayloadBytes.length != payloadCapacity) {
-            cachedPayloadBytes = new byte[payloadCapacity];
-        }
-
-        int headerCapacity = bb.array().length - payloadCapacity;
-        if(cachedHeaderBytes.length != headerCapacity) {
-            cachedHeaderBytes = new byte[headerCapacity];
-        }
-
-        //grabbing name bytes from header bytes basing from the specified name length
-        byte[] nameBytes = grabHeaderBytes(nameLength, Constants.NONAME_HEADER_BYTES);
-        //decoding the UTF-8 bytes into an actual string
-        name = new String(nameBytes, StandardCharsets.UTF_8);
+        redefineCacheArrays();
     }
 
     @Override
@@ -256,6 +214,17 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
     private void wrapUserByteBuffer() {
         if(bb != null) userByteBuffer = ByteBuffer.wrap(bb.array());
+    }
+
+    private void redefineCacheArrays() {
+        //redefining the cache arrays if we don't have the sizes we need
+        if(cachedPayloadBytes.length != payloadCapacity) {
+            cachedPayloadBytes = new byte[payloadCapacity];
+        }
+        int headerCapacity = bb.array().length - payloadCapacity;
+        if(cachedHeaderBytes.length != headerCapacity) {
+            cachedHeaderBytes = new byte[headerCapacity];
+        }
     }
 
 }
