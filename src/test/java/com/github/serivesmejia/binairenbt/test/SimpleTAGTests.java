@@ -4,6 +4,8 @@ import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
 import com.github.serivesmejia.binairenbt.tag.*;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /*
@@ -67,7 +69,7 @@ public class SimpleTAGTests {
 
     @Test
     public void TestTagLong() throws IllegalTagFormatException {
-        long lng = 26720;
+        long lng = 267205353534634634L;
 
         TAGLong tagNbt = new TAGLong("longTag");
         tagNbt.fromJava(lng);
@@ -136,6 +138,38 @@ public class SimpleTAGTests {
         TAGString sameTagNbt = new TAGString(tagNbt.bytes());
 
         assertEquals(lng, sameTagNbt.toJava());
+        assertEquals(tagNbt.name(), sameTagNbt.name());
+    }
+
+    @Test
+    public void TestTagIntArray() throws IllegalTagFormatException {
+        Integer[] lng = new Integer[] {9, 2, 3, 1};
+
+        TAGIntArray tagNbt = new TAGIntArray("intArrayTag", 4);
+        tagNbt.fromJava(lng);
+
+        assertArrayEquals(tagNbt.toJava(), lng);
+
+        TAGIntArray sameTagNbt = new TAGIntArray(tagNbt.bytes());
+
+        assertArrayEquals(lng, sameTagNbt.toJava());
+        assertEquals(tagNbt.name(), sameTagNbt.name());
+    }
+
+    @Test
+    public void TestTagLongArray() throws IllegalTagFormatException {
+        Long[] lng = new Long[] {9537357454632L, 53453646334L, 575646456L, 1213215990L};
+
+        TAGLongArray tagNbt = new TAGLongArray("longArrayTag", 4);
+        tagNbt.fromJava(lng);
+
+        System.out.println(Arrays.toString(tagNbt.bytes()));
+
+        assertArrayEquals(tagNbt.toJava(), lng);
+
+        TAGLongArray sameTagNbt = new TAGLongArray(tagNbt.bytes());
+
+        assertArrayEquals(lng, sameTagNbt.toJava());
         assertEquals(tagNbt.name(), sameTagNbt.name());
     }
 

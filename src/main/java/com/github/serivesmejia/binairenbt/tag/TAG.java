@@ -16,8 +16,9 @@ public interface TAG<T> {
         STRING(8, TAGString.class),
         LIST(9, TAGList.class),
         COMPOUND(10, null),
-        INT_ARRAY(11, null),
-        LONG_ARRAY(12, null);
+        INT_ARRAY(11, TAGIntArray.class),
+        LONG_ARRAY(12, TAGLongArray.class),
+        UNKNOWN(-1, null);
 
         public final int id;
         public final Class clazz;
@@ -33,8 +34,7 @@ public interface TAG<T> {
                     return val;
                 }
             }
-
-            return null;
+            return UNKNOWN;
         }
 
         public static Type fromClass(Class<?> clazz) {
@@ -43,8 +43,7 @@ public interface TAG<T> {
                     return val;
                 }
             }
-
-            return null;
+            return UNKNOWN;
         }
     }
 

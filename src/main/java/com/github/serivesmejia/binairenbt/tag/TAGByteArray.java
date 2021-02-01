@@ -31,7 +31,6 @@ public class TAGByteArray extends ByteBufferTAG<Byte[]>{
     @Override
     public Byte[] toJava() {
         byte[] byteArray = grabPayloadBytes(arrayCapacity(), capacityInt.payloadCapacity());
-
         return ArrayUtils.toObject(byteArray);
     }
 

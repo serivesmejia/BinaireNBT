@@ -2,6 +2,7 @@ package com.github.serivesmejia.binairenbt.tag;
 
 import com.github.serivesmejia.binairenbt.Constants;
 import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
+import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
 import com.github.serivesmejia.binairenbt.util.nbt.NBTHeaderBuilder;
 import com.github.serivesmejia.binairenbt.util.nbt.NBTSimpleTagParser;
 
@@ -84,6 +85,9 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
         else if(bytes.length < bb.capacity()) throw new BufferUnderflowException();
 
         NBTSimpleTagParser parser = new NBTSimpleTagParser(bytes, typePayloadCapacity);
+
+        if(parser.getId() != id())
+            throw new UnmatchingTagIdException("Tag id from given bytes (" + parser.getId() + ") does not match the id of this type (" + id() + ")");
 
         payloadCapacity = parser.getPayloadCapacity();
         payloadPosition = parser.getPayloadStartPosition();

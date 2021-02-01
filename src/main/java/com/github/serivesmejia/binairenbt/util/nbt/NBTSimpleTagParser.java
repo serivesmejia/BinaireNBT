@@ -50,7 +50,7 @@ public class NBTSimpleTagParser {
         if(maxPayloadCapacity > 0 && getPayloadCapacity() > maxPayloadCapacity)
             throw new IllegalTagFormatException("Tag's payload capacity is bigger than the max allowed one (" + maxPayloadCapacity + ")");
 
-        if(getTagType() == null)
+        if(getTagType() == TAG.Type.UNKNOWN)
             throw new UnknownTagIdException("Tag ID " + getId() + " does not match any existent one");
     }
 
@@ -97,15 +97,9 @@ public class NBTSimpleTagParser {
      */
     public String getName() {
         if(cachedName == null) {
-            byte[] nameBytes = new byte[getNameBytesLength()];
-
-            for(int i = 0 ; i < nameBytes.length ; i++) {
-                nameBytes[i] = bb.get(i + Constants.NONAME_HEADER_BYTES);
-            }
-
+            byte[] nameBytes = grabHeaderBytes(getNameBytesLength(), Constants.NONAME_HEADER_BYTES);
             cachedName = new String(nameBytes, StandardCharsets.UTF_8);
         }
-
         return cachedName;
     }
 
