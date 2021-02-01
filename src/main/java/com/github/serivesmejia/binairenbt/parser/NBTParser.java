@@ -1,4 +1,4 @@
-package com.github.serivesmejia.binairenbt;
+package com.github.serivesmejia.binairenbt.parser;
 
 import com.github.serivesmejia.binairenbt.tag.TAG;
 

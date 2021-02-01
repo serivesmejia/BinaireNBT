@@ -48,12 +48,12 @@ public class ByteUtil {
         return bb.getShort();
     }
 
-    public static short bigEndianBytesToUnsignedShort(byte[] bytes) {
+    public static int bigEndianBytesToUnsignedShort(byte[] bytes) {
         ByteBuffer bb = ByteBuffer.wrap(bytes);
         bb.order(ByteOrder.BIG_ENDIAN);
 
         //a bit hacky again
-        return (short) bb.getChar();
+        return bb.getChar();
     }
 
 }
