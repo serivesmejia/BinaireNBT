@@ -53,9 +53,4 @@ public class TAGByteArray extends ByteBufferTAG<Byte[]>{
         return capacityInt.toJava();
     }
 
-    @Override
-    public int id() {
-        return 7;
-    }
-
 }

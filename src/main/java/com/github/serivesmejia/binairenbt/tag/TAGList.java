@@ -88,11 +88,6 @@ public class TAGList<T extends TAG<?>> implements TAG<List<T>> {
         return new byte[0];
     }
 
-    @Override
-    public int id() {
-        return 9;
-    }
-
     private Class<? extends TAG> getTClass() {
         ParameterizedType pt = (ParameterizedType) this.getClass().getGenericInterfaces()[0];
         return  (Class<? extends TAG>) pt.getActualTypeArguments()[0];

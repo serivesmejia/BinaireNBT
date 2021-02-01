@@ -1,4 +1,4 @@
-package com.github.serivesmejia.binairenbt.util.nbt;
+package com.github.serivesmejia.binairenbt.parser;
 
 import com.github.serivesmejia.binairenbt.Constants;
 import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
@@ -10,7 +10,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * This class serves as a simple tag parser, a common task in the library.<br/>
- *
+ * It validates the tag, optionally enforces a payload capacity, and finally it exposes<br/>
+ * multiple getter methods for the tag properties, and for grabbing bytes from the header & payload.
  */
 public class NBTSimpleTagParser {
 

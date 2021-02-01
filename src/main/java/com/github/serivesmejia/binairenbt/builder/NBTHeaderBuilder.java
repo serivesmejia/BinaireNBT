@@ -1,4 +1,4 @@
-package com.github.serivesmejia.binairenbt.util.nbt;
+package com.github.serivesmejia.binairenbt.builder;
 
 import com.github.serivesmejia.binairenbt.Constants;
 

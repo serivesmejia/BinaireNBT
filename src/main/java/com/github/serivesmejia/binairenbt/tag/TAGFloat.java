@@ -28,9 +28,4 @@ public class TAGFloat extends ByteBufferTAG<Float> {
         bb.putFloat(value);
     }
 
-    @Override
-    public int id() {
-        return 5;
-    }
-
 }

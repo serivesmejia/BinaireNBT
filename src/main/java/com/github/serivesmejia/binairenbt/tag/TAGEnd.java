@@ -77,9 +77,4 @@ public class TAGEnd implements TAG<Void> {
         throw new UnsupportedOperationException("nameLengthBytes() method is not supported for this type of TAG (END)");
     }
 
-    @Override
-    public int id() {
-        return 0;
-    }
-
 }

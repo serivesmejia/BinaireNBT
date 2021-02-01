@@ -69,13 +69,18 @@ public class TAGLongArray extends ByteBufferTAG<Long[]> {
         }
     }
 
-    public final int arrayCapacity() {
-        return capacityInt.toJava();
+    public final long get(int index) {
+        bb.position(payloadPosition() + capacityInt.payloadCapacity() + (Constants.TAG_LONG_PAYLOAD_CAPACITY * index));
+        return bb.getLong();
     }
 
-    @Override
-    public int id() {
-        return 12;
+    public final void set(int index, long value) {
+        bb.position(payloadPosition() + capacityInt.payloadCapacity() + (Constants.TAG_LONG_PAYLOAD_CAPACITY * index));
+        bb.putLong(value);
+    }
+
+    public final int arrayCapacity() {
+        return capacityInt.toJava();
     }
 
 }

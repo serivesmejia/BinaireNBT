@@ -28,9 +28,4 @@ public class TAGDouble extends ByteBufferTAG<Double> {
         bb.putDouble(value);
     }
 
-    @Override
-    public int id() {
-        return 8;
-    }
-
 }

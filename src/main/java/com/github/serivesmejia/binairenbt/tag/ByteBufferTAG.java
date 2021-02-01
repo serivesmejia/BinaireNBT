@@ -3,8 +3,8 @@ package com.github.serivesmejia.binairenbt.tag;
 import com.github.serivesmejia.binairenbt.Constants;
 import com.github.serivesmejia.binairenbt.exception.IllegalTagFormatException;
 import com.github.serivesmejia.binairenbt.exception.UnmatchingTagIdException;
-import com.github.serivesmejia.binairenbt.util.nbt.NBTHeaderBuilder;
-import com.github.serivesmejia.binairenbt.util.nbt.NBTSimpleTagParser;
+import com.github.serivesmejia.binairenbt.builder.NBTHeaderBuilder;
+import com.github.serivesmejia.binairenbt.parser.NBTSimpleTagParser;
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
@@ -41,7 +41,8 @@ public abstract class ByteBufferTAG<T> implements TAG<T>{
 
         NBTHeaderBuilder headerBuilder = new NBTHeaderBuilder();
 
-        cachedHeaderBytes = headerBuilder.setTagId(idByte())
+        cachedHeaderBytes = headerBuilder
+                            .setTagId(idByte())
                             .setName(name)
                             .build();
 

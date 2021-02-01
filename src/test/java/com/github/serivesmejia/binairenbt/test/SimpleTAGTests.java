@@ -163,8 +163,6 @@ public class SimpleTAGTests {
         TAGLongArray tagNbt = new TAGLongArray("longArrayTag", 4);
         tagNbt.fromJava(lng);
 
-        System.out.println(Arrays.toString(tagNbt.bytes()));
-
         assertArrayEquals(tagNbt.toJava(), lng);
 
         TAGLongArray sameTagNbt = new TAGLongArray(tagNbt.bytes());

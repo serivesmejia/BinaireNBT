@@ -1,7 +1,7 @@
 package com.github.serivesmejia.binairenbt.test;
 
 import com.github.serivesmejia.binairenbt.tag.TAG;
-import com.github.serivesmejia.binairenbt.util.nbt.NBTSimpleTagParser;
+import com.github.serivesmejia.binairenbt.parser.NBTSimpleTagParser;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

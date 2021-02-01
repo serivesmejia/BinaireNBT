@@ -28,9 +28,4 @@ public class TAGShort extends ByteBufferTAG<Short> {
         bb.putShort(value);
     }
 
-    @Override
-    public int id() {
-        return 2;
-    }
-
 }

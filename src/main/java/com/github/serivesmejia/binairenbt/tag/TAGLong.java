@@ -28,9 +28,4 @@ public class TAGLong extends ByteBufferTAG<Long> {
         bb.putLong(value);
     }
 
-    @Override
-    public int id() {
-        return 4;
-    }
-
 }

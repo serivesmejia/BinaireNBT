@@ -69,13 +69,18 @@ public class TAGIntArray extends ByteBufferTAG<Integer[]>{
         }
     }
 
-    public final int arrayCapacity() {
-        return capacityInt.toJava();
+    public final int get(int index) {
+        bb.position(payloadPosition() + capacityInt.payloadCapacity() + (Constants.TAG_INT_PAYLOAD_CAPACITY * index));
+        return bb.getInt();
     }
 
-    @Override
-    public int id() {
-        return 11;
+    public final void set(int index, int value) {
+        bb.position(payloadPosition() + capacityInt.payloadCapacity() + (Constants.TAG_INT_PAYLOAD_CAPACITY * index));
+        bb.putInt(value);
+    }
+
+    public final int arrayCapacity() {
+        return capacityInt.toJava();
     }
 
 }

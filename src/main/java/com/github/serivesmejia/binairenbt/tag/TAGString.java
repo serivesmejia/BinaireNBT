@@ -52,12 +52,8 @@ public class TAGString extends ByteBufferTAG<String> {
         bb.put(stringBytes);
     }
 
-    public final short stringBytesLength() {
+    public final int stringBytesLength() {
         return ByteUtil.bigEndianBytesToUnsignedShort(bytesStringBytesLength);
     }
 
-    @Override
-    public int id() {
-        return 8;
-    }
 }

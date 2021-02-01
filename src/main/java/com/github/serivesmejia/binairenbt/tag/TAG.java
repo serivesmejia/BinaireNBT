@@ -70,7 +70,9 @@ public interface TAG<T> {
 
     byte[] nameLengthBytes();
 
-    int id();
+    default int id() {
+        return Type.fromClass(this.getClass()).id;
+    }
 
     default byte idByte() {
         return (byte)id();

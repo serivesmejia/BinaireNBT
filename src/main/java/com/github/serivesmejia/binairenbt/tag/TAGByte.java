@@ -24,9 +24,4 @@ public class TAGByte extends ByteBufferTAG<Byte> {
         bb.put(value);
     }
 
-    @Override
-    public int id() {
-        return 1;
-    }
-
 }
